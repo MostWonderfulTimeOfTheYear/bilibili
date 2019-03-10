@@ -30,14 +30,14 @@ With noFailure(studentid,degreeid) AS(
 	SELECT studentid,GPA
 	FROM studentsGpa 
 	WHERE GPA BETWEEN 9 AND 10;
-Create TEMP VIEW totalECTS(studentid,degreeid,totalECTS) AS
+Create MATERIALIZED VIEW totalECTS(studentid,degreeid,totalECTS) AS
 	SELECT studentregistrationstodegrees.studentid,studentregistrationstodegrees.degreeid,SUM(courses.ects) AS totalECTS
 	FROM studentregistrationstodegrees, courseregistrations,courses,courseoffers
 	WHERE studentregistrationstodegrees.studentregistrationid=courseregistrations.studentregistrationid AND
 		courses.courseid=courseoffers.courseid AND courseoffers.courseofferid=courseregistrations.courseofferid 
 	AND courseregistrations.grade>=5
 	GROUP BY studentregistrationstodegrees.studentid,studentregistrationstodegrees.degreeid;
-CREATE TEMP VIEW activeStudents(studentid,degreeid) AS 
+CREATE MATERIALIZED VIEW activeStudents(studentid,degreeid) AS 
 	SELECT totalECTS.studentid,degrees.degreeid
 	FROM totalECTS, degrees
 	WHERE totalECTS.degreeid=degrees.degreeid AND totalECTS.totalECTS<degrees.totalects;
