@@ -19,7 +19,7 @@ With noFailure(studentid,degreeid) AS(
 			SELECT studentregistrationstodegrees.studentid,studentregistrationstodegrees.degreeid,SUM(courseregistrations.grade*courses.ects) as weightedtotalgrades ,SUM(courses.ects) as totalects
 			FROM studentregistrationstodegrees,courseregistrations,courses,courseoffers
 			WHERE studentregistrationstodegrees.studentregistrationid=courseregistrations.studentregistrationid AND
-			  courseoffers.courseofferid=courseregistrations.courseofferid AND courses.courseid=courseoffers.courseid AND 
+			  courseoffers.courseofferid=courseregistrations.courseofferid AND  courseregistrations.grade IS NOT NULL AND courses.courseid=courseoffers.courseid AND 
 			  (studentregistrationstodegrees.studentid, studentregistrationstodegrees.degreeid) IN (SELECT studentid,degreeid
 										FROM noFailure)
 			GROUP BY studentregistrationstodegrees.studentid, studentregistrationstodegrees.degreeid),
@@ -35,12 +35,12 @@ Create MATERIALIZED VIEW totalECTS(studentid,degreeid,totalECTS) AS
 	FROM studentregistrationstodegrees, courseregistrations,courses,courseoffers
 	WHERE studentregistrationstodegrees.studentregistrationid=courseregistrations.studentregistrationid AND
 		courses.courseid=courseoffers.courseid AND courseoffers.courseofferid=courseregistrations.courseofferid 
-	AND courseregistrations.grade>=5
+	AND courseregistrations.grade>=5 AND courseregistrations.grade IS NOT NULL 
 	GROUP BY studentregistrationstodegrees.studentid,studentregistrationstodegrees.degreeid;
 CREATE MATERIALIZED VIEW activeStudents(studentid,degreeid) AS 
-	SELECT totalECTS.studentid,degrees.degreeid
+	SELECT totalECTS.studentid,totalECTS.degreeid
 	FROM totalECTS, degrees
-	WHERE totalECTS.degreeid=degrees.degreeid AND totalECTS.totalECTS<degrees.totalects;
+	WHERE totalECTS.degreeid=degrees.degreeid AND totalECTS.totalECTS < degrees.totalects;
 CREATE MATERIALIZED VIEW ExcellentCourseStudents(StudentId, NumberOfCoursesWhereExcellent) AS
     WITH
         HighestGradeCourseOffers AS (
